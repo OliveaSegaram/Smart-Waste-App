@@ -13,5 +13,5 @@
     "**/*.tsx",
     ".expo/types/**/*.ts",
     "expo-env.d.ts"
-  ]
+, "app/(tabs)/utils/ManageAccount/formValidation.js", "app/(tabs)/hooks/ManageAccount/useRegisterForm.js", "app/(tabs)/components/ManageAccount/RegisterForm.js", "app/(tabs)/screens/ManageAccount/RegisterScreen.js"  ]
 }
