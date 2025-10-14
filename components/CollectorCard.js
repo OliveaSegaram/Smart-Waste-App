@@ -1,7 +1,8 @@
 // app/components/CollectorCard.js
 
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native'; // ✅ Added Image import
+import profileImg from '../../assets/images/profile.jpg';
 
 /**
  * ================================
@@ -36,6 +37,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
  * @param {number} collector.assignedBins - Number of bins assigned
  * @param {string} collector.region - Area or route name
  * @param {Function} onAssign - Callback for assigning a new bin/route
+ * 
  **/
 const CollectorCard = ({ collector, onAssign }) => {
   // Defensive check to prevent runtime errors
@@ -50,15 +52,15 @@ const CollectorCard = ({ collector, onAssign }) => {
     <View style={styles.card}>
       {/* Profile Section */}
       <View style={styles.profileSection}>
-        {/* <Image
+        <Image
           source={
             image
               ? { uri: image }
-              : require('../../../../assets/images/logonav.png')
+              : profileImg
           }
           style={styles.avatar}
           resizeMode="cover"
-        /> */}
+        />
         <View style={styles.infoSection}>
           <Text style={styles.name}>{name}</Text>
           <Text style={styles.region}>{region}</Text>

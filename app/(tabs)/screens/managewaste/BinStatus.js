@@ -1,10 +1,14 @@
 // app/tabs/screens/managewaste/BinStatus.js
 
 import { Ionicons } from '@expo/vector-icons';
-import { useLocalSearchParams, useRouter } from "expo-router"; // ✅ added useRouter
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from 'react';
 import {
     Alert,
+    Image // ✅ Added Image import
+    ,
+
+
     ScrollView,
     StyleSheet,
     Text,
@@ -13,63 +17,23 @@ import {
 } from 'react-native';
 import CollectorCard from '../../../../components/CollectorCard';
 
-/**
- * SOLID PRINCIPLES APPLIED:
- * 
- * 1. Single Responsibility Principle (SRP):
- *    - Component handles bin status display and collector selection ONLY
- *    - Route management logic delegated to separate functions
- *    - Each section (bin info, collectors, actions) separated into functions
- * 
- * 2. Open/Closed Principle (OCP):
- *    - Extensible through props without modifying component
- *    - CollectorCard component can be enhanced independently
- * 
- * 3. Liskov Substitution Principle (LSP):
- *    - Navigation prop can be substituted with any navigation implementation
- * 
- * 4. Interface Segregation Principle (ISP):
- *    - Only receives necessary props (navigation, route)
- * 
- * 5. Dependency Inversion Principle (DIP):
- *    - Depends on navigation abstraction, not concrete implementation
- */
-
 const BinStatus = () => {
-    const router = useRouter(); // ✅ now defined properly
+    const router = useRouter();
     const params = useLocalSearchParams(); 
     const binId = params?.binId;
 
-    // STATE MANAGEMENT
     const [binData, setBinData] = useState({
         id: 'ID-258800',
         fillLevel: 90,
         fillChange: 10,
         location: 'SMT, Motueka',
+        image: require('../../../../assets/images/bin.jpg') 
     });
 
     const [collectors, setCollectors] = useState([
-        {
-            id: '1',
-            name: 'Jane Smith',
-            distance: '2.5km Away',
-            availability: 'Available Now',
-            type: 'nearest',
-        },
-        {
-            id: '2',
-            name: 'Jane Smith',
-            distance: '3.5km Away',
-            availability: 'Available Now',
-            type: 'general',
-        },
-        {
-            id: '3',
-            name: 'James',
-            distance: '5.0km Away',
-            availability: 'Available Now',
-            type: 'special',
-        },
+        { id: '1', name: 'Jane', distance: '2.5km Away', availability: 'Available Now', type: 'nearest', image: require('../../../../assets/images/profile.jpg') },
+        { id: '2', name: 'Kaiz', distance: '3.5km Away', availability: 'Available Now', type: 'general', image: require('../../../../assets/images/profile.jpg') },
+        { id: '3', name: 'Allan', distance: '5.0km Away', availability: 'Available Now', type: 'special', image: require('../../../../assets/images/profile.jpg') },
     ]);
 
     const [selectedCollectors, setSelectedCollectors] = useState([]);
@@ -106,7 +70,6 @@ const BinStatus = () => {
         });
     };
 
-    
     const handleRemoveFromReview = () => {
         Alert.alert(
             'Remove from Review',
@@ -118,8 +81,7 @@ const BinStatus = () => {
                     style: 'destructive',
                     onPress: async () => {
                         try {
-                            // TODO: Firebase call to remove from review
-                            router.push('/(tabs)/screens/managewaste/AdminDashboard'); // ✅ redirect
+                            router.push('/(tabs)/screens/managewaste/AdminDashboard');
                         } catch (error) {
                             Alert.alert('Error', 'Failed to remove bin from review');
                         }
@@ -129,7 +91,6 @@ const BinStatus = () => {
         );
     };
 
-    
     const handleAddSelectedToRoute = () => {
         if (selectedCollectors.length === 0) {
             Alert.alert('No Selection', 'Please select at least one collector');
@@ -157,6 +118,11 @@ const BinStatus = () => {
 
     const renderBinInfo = () => (
         <View style={styles.binInfoCard}>
+            {/* ✅ Added Image display */}
+            <Image
+                source={binData.image}
+                style={styles.binImage}
+            />
             <View style={styles.fillLevelContainer}>
                 <Text style={styles.fillLevelLabel}>Fill Level</Text>
                 <Text style={styles.fillLevelValue}>{binData.fillLevel}%</Text>
@@ -182,12 +148,20 @@ const BinStatus = () => {
 
             <View style={styles.collectorsGrid}>
                 {collectors.map((collector) => (
-                    <CollectorCard
+                    <TouchableOpacity
                         key={collector.id}
-                        collector={collector}
-                        isSelected={selectedCollectors.includes(collector.id)}
                         onPress={() => toggleCollectorSelection(collector.id)}
-                    />
+                        style={[
+                            styles.collectorWrapper,
+                            selectedCollectors.includes(collector.id) && styles.collectorSelected, // ✅ highlight when selected
+                        ]}
+                        activeOpacity={0.8}
+                    >
+                        <CollectorCard
+                            collector={collector}
+                            isSelected={selectedCollectors.includes(collector.id)}
+                        />
+                    </TouchableOpacity>
                 ))}
             </View>
         </View>
@@ -201,9 +175,15 @@ const BinStatus = () => {
             >
                 <Text style={styles.removeButtonText}>Remove from Review</Text>
             </TouchableOpacity>
+
+            {/* ✅ Disable button when no collector selected */}
             <TouchableOpacity
-                style={styles.addToRouteButton}
+                style={[
+                    styles.addToRouteButton,
+                    selectedCollectors.length === 0 && { backgroundColor: '#BDBDBD' },
+                ]}
                 onPress={handleAddSelectedToRoute}
+                disabled={selectedCollectors.length === 0}
             >
                 <Text style={styles.addToRouteButtonText}>Add Selected to Route</Text>
             </TouchableOpacity>
@@ -222,7 +202,6 @@ const BinStatus = () => {
                 {renderActionButtons()}
             </ScrollView>
 
-            {/* Bottom Navigation */}
             <View style={styles.bottomNav}>
                 <TouchableOpacity 
                     style={styles.navItem}
@@ -248,6 +227,7 @@ const BinStatus = () => {
     );
 };
 
+// ✅ Added style for bin image
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F5F5F5' },
   scrollView: { flex: 1 },
@@ -261,6 +241,7 @@ const styles = StyleSheet.create({
   titleBar: { backgroundColor: '#E8E8E8', paddingVertical: 12, paddingHorizontal: 20 },
   titleText: { fontSize: 16, fontWeight: '500' },
   binInfoCard: { backgroundColor: '#FFF', marginHorizontal: 20, marginTop: 20, padding: 20, borderRadius: 10, flexDirection: 'row', alignItems: 'center' },
+  binImage: { width: 80, height: 80, borderRadius: 10, resizeMode: 'cover', marginRight: 15 }, // ✅ bin image style
   fillLevelContainer: { flex: 1, marginLeft: 20 },
   fillLevelLabel: { fontSize: 12, color: '#666' },
   fillLevelValue: { fontSize: 32, fontWeight: 'bold', color: '#000' },
@@ -273,6 +254,8 @@ const styles = StyleSheet.create({
   assignButton: { flexDirection: 'row', alignItems: 'center' },
   assignButtonText: { fontSize: 12, marginRight: 5 },
   collectorsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  collectorWrapper: { width: '48%' },
+  collectorSelected: { borderColor: '#21f375ff', borderWidth: 2, borderRadius: 10 },
   actionButtons: { paddingHorizontal: 20, paddingVertical: 20, marginBottom: 100 },
   removeButton: { backgroundColor: '#FFF', paddingVertical: 15, borderRadius: 8, alignItems: 'center', marginBottom: 10, borderWidth: 1, borderColor: '#E8E8E8' },
   removeButtonText: { fontSize: 16, fontWeight: '600', color: '#000' },
