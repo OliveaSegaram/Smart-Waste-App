@@ -3,11 +3,11 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect, useState } from 'react';
 import {
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
 } from 'react-native';
 
 /**
@@ -369,7 +369,7 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   completeButton: {
-    backgroundColor: '#2196F3',
+    backgroundColor: '#21f375ff',
     marginHorizontal: 20,
     marginTop: 30,
     marginBottom: 100,

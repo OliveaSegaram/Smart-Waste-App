@@ -4,12 +4,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from "expo-router";
 import { useEffect, useState } from 'react';
 import {
-    Dimensions,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Dimensions,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import BinCard from '../../../../components/BinCard';
 import StatCard from '../../../../components/StatCard';
@@ -34,7 +34,8 @@ import StatCard from '../../../../components/StatCard';
 const { width } = Dimensions.get('window');
 
 const AdminDashboard = ({ navigation }) => {
-     const router = useRouter();
+  const router = useRouter();
+
   // STATE MANAGEMENT - SRP: Separate concerns for different data types
   const [stats, setStats] = useState({
     totalBins: 50,
@@ -60,52 +61,29 @@ const AdminDashboard = ({ navigation }) => {
     status: 'FULL',
   });
 
-  /**
-   * BEST PRACTICE: useEffect for side effects
-   * - Separates data fetching from rendering logic (SRP)
-   * - Clean up function prevents memory leaks
-   */
   useEffect(() => {
-    // TODO: Fetch data from Firebase
-    // This will be replaced with actual Firebase calls
     fetchDashboardData();
-
-    return () => {
-      // Cleanup function
-    };
+    return () => {};
   }, []);
 
-  /**
-   * BEST PRACTICE: Separate functions for different operations (SRP)
-   * DIP: This function will depend on injected Firebase service
-   */
   const fetchDashboardData = async () => {
     try {
       // TODO: Replace with Firebase fetching logic
-      // const data = await FirebaseService.getDashboardStats();
-      // setStats(data.stats);
-      // setHistoricalData(data.historical);
-      // setLatestBin(data.latestBin);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
-      // BEST PRACTICE: Error handling
     }
   };
 
-  /**
-   * BEST PRACTICE: Event handlers separated from JSX (Clean Code)
-   */
+  // ✅ Navigate to RouteManagement page
   const handleAddToRoute = () => {
-    navigation.navigate('BinStatus', { binId: latestBin.id });
+    router.push("/(tabs)/screens/managewaste/RouteManagement");
   };
 
+  // ✅ Navigate to BinStatus page
   const handleViewDetails = () => {
-    navigation.navigate('BinStatus', { binId: latestBin.id });
+    router.push("/(tabs)/screens/managewaste/BinStatus");
   };
 
-  /**
-   * BEST PRACTICE: Separate render functions for complex UI sections (SRP)
-   */
   const renderHeader = () => (
     <View style={styles.header}>
       <View>
@@ -144,10 +122,6 @@ const AdminDashboard = ({ navigation }) => {
     </View>
   );
 
-  /**
-   * BEST PRACTICE: Rendering chart with normalized data
-   * - Pure function approach (no side effects)
-   */
   const renderHistoricalChart = () => {
     const maxLevel = Math.max(...historicalData.map(d => d.level));
     
@@ -204,7 +178,6 @@ const AdminDashboard = ({ navigation }) => {
         {renderLatestBinStatus()}
       </ScrollView>
 
-      {/* BEST PRACTICE: Bottom Navigation - Component Composition */}
       <View style={styles.bottomNav}>
         <TouchableOpacity style={styles.navItem}>
           <Ionicons name="home" size={24} color="#000" />
@@ -227,11 +200,6 @@ const AdminDashboard = ({ navigation }) => {
   );
 };
 
-/**
- * BEST PRACTICE: StyleSheet for performance optimization
- * - Styles are created once and reused
- * - Better performance than inline styles
- */
 const styles = StyleSheet.create({
   container: {
     flex: 1,

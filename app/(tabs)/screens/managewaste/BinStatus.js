@@ -1,7 +1,7 @@
 // app/tabs/screens/managewaste/BinStatus.js
 
 import { Ionicons } from '@expo/vector-icons';
-import { useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router"; // ✅ added useRouter
 import { useEffect, useState } from 'react';
 import {
     Alert,
@@ -36,11 +36,11 @@ import CollectorCard from '../../../../components/CollectorCard';
  */
 
 const BinStatus = () => {
-    //const router = useRouter();
-    const params = useLocalSearchParams(); // safely get route params
+    const router = useRouter(); // ✅ now defined properly
+    const params = useLocalSearchParams(); 
     const binId = params?.binId;
 
-    // STATE MANAGEMENT - SRP: Each state serves single purpose
+    // STATE MANAGEMENT
     const [binData, setBinData] = useState({
         id: 'ID-258800',
         fillLevel: 90,
@@ -74,25 +74,14 @@ const BinStatus = () => {
 
     const [selectedCollectors, setSelectedCollectors] = useState([]);
 
-    /**
-     * BEST PRACTICE: useEffect for data fetching
-     * Separation of Concerns - Data loading separate from rendering
-     */
     useEffect(() => {
         fetchBinData();
         fetchAvailableCollectors();
     }, [binId]);
 
-    /**
-     * BEST PRACTICE: Async data fetching with error handling
-     * DIP: Will depend on injected Firebase service
-     */
     const fetchBinData = async () => {
         try {
             console.log('Bin ID:', binId);
-            // TODO: Replace with Firebase call
-            // const data = await FirebaseService.getBinDetails(binId);
-            // setBinData(data);
         } catch (error) {
             console.error('Error fetching bin data:', error);
             Alert.alert('Error', 'Failed to load bin data');
@@ -101,18 +90,12 @@ const BinStatus = () => {
 
     const fetchAvailableCollectors = async () => {
         try {
-            // TODO: Replace with Firebase call
-            // const data = await FirebaseService.getAvailableCollectors();
-            // setCollectors(data);
+            // Placeholder for backend logic
         } catch (error) {
             console.error('Error fetching collectors:', error);
         }
     };
 
-    /**
-     * BEST PRACTICE: Pure function for collector selection
-     * No side effects, returns new state
-     */
     const toggleCollectorSelection = (collectorId) => {
         setSelectedCollectors(prev => {
             if (prev.includes(collectorId)) {
@@ -123,10 +106,7 @@ const BinStatus = () => {
         });
     };
 
-    /**
-     * BEST PRACTICE: Separate business logic functions
-     * SRP: Each function has single responsibility
-     */
+    
     const handleRemoveFromReview = () => {
         Alert.alert(
             'Remove from Review',
@@ -139,8 +119,7 @@ const BinStatus = () => {
                     onPress: async () => {
                         try {
                             // TODO: Firebase call to remove from review
-                            // await FirebaseService.removeBinFromReview(binData.id);
-                            router.back(); // use Expo Router to go back
+                            router.push('/(tabs)/screens/managewaste/AdminDashboard'); // ✅ redirect
                         } catch (error) {
                             Alert.alert('Error', 'Failed to remove bin from review');
                         }
@@ -150,22 +129,15 @@ const BinStatus = () => {
         );
     };
 
+    
     const handleAddSelectedToRoute = () => {
         if (selectedCollectors.length === 0) {
             Alert.alert('No Selection', 'Please select at least one collector');
             return;
         }
-
-        // Navigate to route management screen with selected data
-        router.push({
-            pathname: '/app/tabs/screens/managewaste/RouteManagement',
-            params: { binId: binData.id, collectorIds: selectedCollectors },
-        });
+        router.push("/(tabs)/screens/managewaste/RouteManagement");
     };
 
-    /**
-     * BEST PRACTICE: Extracted render functions for readability (Clean Code)
-     */
     const renderHeader = () => (
         <View style={styles.header}>
             <View>
@@ -240,16 +212,11 @@ const BinStatus = () => {
 
     return (
         <View style={styles.container}>
-            <ScrollView 
-                style={styles.scrollView}
-                showsVerticalScrollIndicator={false}
-            >
+            <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
                 {renderHeader()}
-
                 <View style={styles.titleBar}>
                     <Text style={styles.titleText}>Bin Status</Text>
                 </View>
-
                 {renderBinInfo()}
                 {renderCollectorsList()}
                 {renderActionButtons()}
@@ -259,7 +226,7 @@ const BinStatus = () => {
             <View style={styles.bottomNav}>
                 <TouchableOpacity 
                     style={styles.navItem}
-                    onPress={() => router.push('/app/tabs/screens/AdminDashboard')}
+                    onPress={() => router.push('/(tabs)/screens/managewaste/AdminDashboard')}
                 >
                     <Ionicons name="home-outline" size={24} color="#666" />
                     <Text style={[styles.navLabel, styles.navLabelInactive]}>Home</Text>
@@ -281,25 +248,10 @@ const BinStatus = () => {
     );
 };
 
-/**
- * BEST PRACTICE: Centralized styles using StyleSheet
- */
 const styles = StyleSheet.create({
-  // ... keep all your styles as is
-  container: {
-    flex: 1,
-    backgroundColor: '#F5F5F5',
-  },
+  container: { flex: 1, backgroundColor: '#F5F5F5' },
   scrollView: { flex: 1 },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 50,
-    paddingBottom: 15,
-    backgroundColor: '#FFF',
-  },
+  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 50, paddingBottom: 15, backgroundColor: '#FFF' },
   greeting: { fontSize: 14, color: '#666' },
   welcomeContainer: { flexDirection: 'row', alignItems: 'center' },
   welcomeText: { fontSize: 20, fontWeight: '400' },
@@ -324,7 +276,7 @@ const styles = StyleSheet.create({
   actionButtons: { paddingHorizontal: 20, paddingVertical: 20, marginBottom: 100 },
   removeButton: { backgroundColor: '#FFF', paddingVertical: 15, borderRadius: 8, alignItems: 'center', marginBottom: 10, borderWidth: 1, borderColor: '#E8E8E8' },
   removeButtonText: { fontSize: 16, fontWeight: '600', color: '#000' },
-  addToRouteButton: { backgroundColor: '#2196F3', paddingVertical: 15, borderRadius: 8, alignItems: 'center' },
+  addToRouteButton: { backgroundColor: '#21f375ff', paddingVertical: 15, borderRadius: 8, alignItems: 'center' },
   addToRouteButtonText: { fontSize: 16, fontWeight: '600', color: '#FFF' },
   bottomNav: { flexDirection: 'row', backgroundColor: '#FFF', paddingVertical: 10, paddingBottom: 25, borderTopWidth: 1, borderTopColor: '#E8E8E8', position: 'absolute', bottom: 0, left: 0, right: 0 },
   navItem: { flex: 1, alignItems: 'center', justifyContent: 'center' },

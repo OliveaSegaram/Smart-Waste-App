@@ -3,10 +3,10 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useEffect } from 'react';
 import {
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 /**
@@ -204,12 +204,12 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   backButton: {
-    backgroundColor: '#2196F3',
+    backgroundColor: '#21f375ff',
     paddingVertical: 15,
     paddingHorizontal: 60,
     borderRadius: 8,
     // BEST PRACTICE: Shadow for button depth
-    shadowColor: '#2196F3',
+    shadowColor: '#21f375ff',
     shadowOffset: {
       width: 0,
       height: 2,
