@@ -1,15 +1,22 @@
 import { Tabs } from "expo-router";
-import { Home, FileText, Star, Trash2, Building, History } from "lucide-react-native";
-import { StyleSheet, View, Text } from "react-native";
+import { Home, FileText, Star, Trash2, History } from "lucide-react-native";
+import { StyleSheet, View, Text, Platform } from "react-native";
+import { usePathname } from "expo-router";
 
 export default function TabLayout() {
+  const pathname = usePathname();
+
+  // Hide tab bar on login and register screens
+  const hideTabBar =
+    pathname.includes("LoginScreen") || pathname.includes("RegisterScreen");
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarStyle: styles.tabBar,
+        tabBarStyle: hideTabBar ? { display: "none" } : styles.tabBar,
         tabBarActiveTintColor: "#10B981",
-        tabBarInactiveTintColor: "#6B7280",
+        tabBarInactiveTintColor: "#9CA3AF",
         tabBarShowLabel: false,
       }}
     >
@@ -17,85 +24,146 @@ export default function TabLayout() {
         name="screens/ManageAccount/DashboardScreen"
         options={{
           title: "Dashboard",
-          tabBarIcon: ({ color, size, focused }) => (
+          tabBarIcon: ({ color, focused }) => (
             <View style={styles.navItem}>
-              <Home size={size} color={focused ? "#10B981" : color} />
-              <Text style={[styles.navText, focused && styles.navTextActive]}>
-                Dashboard
-              </Text>
+              <View
+                style={[
+                  styles.iconContainer,
+                  focused && styles.iconContainerActive,
+                ]}
+              >
+                <Home
+                  size={24}
+                  color={focused ? "#10B981" : color}
+                  strokeWidth={2.5}
+                />
+              </View>
+              {focused && (
+                <View style={styles.activeIndicator} />
+              )}
             </View>
           ),
         }}
       />
+
       <Tabs.Screen
         name="screens/ManageAccount/PaymentScreen"
         options={{
           title: "Pay Bill",
-          tabBarIcon: ({ color, size, focused }) => (
+          tabBarIcon: ({ color, focused }) => (
             <View style={styles.navItem}>
-              <FileText size={size} color={focused ? "#10B981" : color} />
-              <Text style={[styles.navText, focused && styles.navTextActive]}>
-                Pay Bill
-              </Text>
+              <View
+                style={[
+                  styles.iconContainer,
+                  focused && styles.iconContainerActive,
+                ]}
+              >
+                <FileText
+                  size={24}
+                  color={focused ? "#10B981" : color}
+                  strokeWidth={2.5}
+                />
+              </View>
+              {focused && (
+                <View style={styles.activeIndicator} />
+              )}
             </View>
           ),
         }}
       />
+
       <Tabs.Screen
         name="screens/ManageAccount/GarbageHistoryScreen"
         options={{
           title: "History",
-          tabBarIcon: ({ color, size, focused }) => (
+          tabBarIcon: ({ color, focused }) => (
             <View style={styles.navItem}>
-              <History size={size} color={focused ? "#10B981" : color} />
-              <Text style={[styles.navText, focused && styles.navTextActive]}>
-                History
-              </Text>
+              <View
+                style={[
+                  styles.iconContainer,
+                  focused && styles.iconContainerActive,
+                ]}
+              >
+                <History
+                  size={24}
+                  color={focused ? "#10B981" : color}
+                  strokeWidth={2.5}
+                />
+              </View>
+              {focused && (
+                <View style={styles.activeIndicator} />
+              )}
             </View>
           ),
         }}
       />
+
       <Tabs.Screen
         name="screens/ManageAccount/RewardsScreen"
         options={{
-          title: "My Rewards",
-          tabBarIcon: ({ color, size, focused }) => (
+          title: "Rewards",
+          tabBarIcon: ({ color, focused }) => (
             <View style={styles.navItem}>
-              <Star size={size} color={focused ? "#10B981" : color} />
-              <Text style={[styles.navText, focused && styles.navTextActive]}>
-                Rewards
-              </Text>
+              <View
+                style={[
+                  styles.iconContainer,
+                  focused && styles.iconContainerActive,
+                ]}
+              >
+                <Star
+                  size={24}
+                  color={focused ? "#10B981" : color}
+                  strokeWidth={2.5}
+                />
+              </View>
+              {focused && (
+                <View style={styles.activeIndicator} />
+              )}
             </View>
           ),
         }}
       />
+
       <Tabs.Screen
         name="screens/ManageAccount/ScheduleScreen"
         options={{
-          title: "Special Pickup",
-          tabBarIcon: ({ color, size, focused }) => (
+          title: "Pickup",
+          tabBarIcon: ({ color, focused }) => (
             <View style={styles.navItem}>
-              <Trash2 size={size} color={focused ? "#10B981" : color} />
-              <Text style={[styles.navText, focused && styles.navTextActive]}>
-                Pickup
-              </Text>
+              <View
+                style={[
+                  styles.iconContainer,
+                  focused && styles.iconContainerActive,
+                ]}
+              >
+                <Trash2
+                  size={24}
+                  color={focused ? "#10B981" : color}
+                  strokeWidth={2.5}
+                />
+              </View>
+              {focused && (
+                <View style={styles.activeIndicator} />
+              )}
             </View>
           ),
         }}
       />
+
+      {/* Keep BusinessDashboard but hide it from tab bar */}
       <Tabs.Screen
         name="screens/ManageAccount/BusinessDashboardScreen"
-        options={{
-          title: "Business",
-          tabBarIcon: ({ color, size, focused }) => (
-            <View style={styles.navItem}>
-              <Building size={size} color={focused ? "#10B981" : color} />
-              <Text style={[styles.navText, focused && styles.navTextActive]}>
-                Business
-              </Text>
-            </View>
-          ),
-        }}
+        options={{ href: null }}
+      />
+
+      {/* Keep Login & Register inside ManageAccount but hide them */}
+      <Tabs.Screen
+        name="screens/ManageAccount/LoginScreen"
+        options={{ href: null }}
+      />
+      <Tabs.Screen
+        name="screens/ManageAccount/RegisterScreen"
+        options={{ href: null }}
       />
     </Tabs>
   );
@@ -103,25 +171,45 @@ export default function TabLayout() {
 
 const styles = StyleSheet.create({
   tabBar: {
-    backgroundColor: "white",
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: "#FFFFFF",
     borderTopWidth: 1,
-    borderTopColor: "#E5E7EB",
-    paddingHorizontal: 4,
-    paddingVertical: 8,
-    height: 70,
+    borderTopColor: "#F3F4F6",
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: Platform.OS === "ios" ? 24 : 16,
+    height: Platform.OS === "ios" ? 88 : 72,
+    elevation: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: -2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
   },
   navItem: {
     alignItems: "center",
-    paddingVertical: 4,
-    paddingHorizontal: 8,
+    justifyContent: "center",
+    flex: 1,
+    height: "100%",
   },
-  navText: {
-    fontSize: 10,
-    color: "#6B7280",
-    marginTop: 4,
+  iconContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    width: 52,
+    height: 52,
+    borderRadius: 16,
+    backgroundColor: "transparent",
   },
-  navTextActive: {
-    color: "#10B981",
-    fontWeight: "600",
+  iconContainerActive: {
+    backgroundColor: "#ECFDF5",
+  },
+  activeIndicator: {
+    width: 32,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: "#10B981",
+    marginTop: 8,
   },
 });

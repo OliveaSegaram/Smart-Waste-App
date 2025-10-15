@@ -1,6 +1,23 @@
 import { Stack } from "expo-router";
+import { useEffect, useState } from "react";
+import { onAuthStateChanged } from "firebase/auth";
+import { auth } from "../firebase";
 
 export default function RootLayout() {
+  const [initializing, setInitializing] = useState(true);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (initializing) setInitializing(false);
+    });
+
+    return unsubscribe;
+  }, []);
+
+  if (initializing) {
+    return null; // or a loading screen
+  }
+
   return (
     <Stack
       screenOptions={{
@@ -9,8 +26,7 @@ export default function RootLayout() {
       }}
     >
       <Stack.Screen name="index" />
-      <Stack.Screen name="(tabs)" />
-      {/* Remove Login and Register from main stack - they'll be accessed separately */}
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
     </Stack>
   );
 }
