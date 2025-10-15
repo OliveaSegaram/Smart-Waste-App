@@ -9,9 +9,8 @@ export default function RootLayout() {
       }}
     >
       <Stack.Screen name="index" />
-      <Stack.Screen name="(tabs)/screens/ManageAccount/LoginScreen" />
-      <Stack.Screen name="(tabs)/screens/ManageAccount/RegisterScreen" />
-      <Stack.Screen name="(tabs)/screens/ManageAccount/HomeScreen" />
+      <Stack.Screen name="(tabs)" />
+      {/* Remove Login and Register from main stack - they'll be accessed separately */}
     </Stack>
   );
 }
