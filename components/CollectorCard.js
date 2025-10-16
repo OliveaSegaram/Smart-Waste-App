@@ -1,7 +1,7 @@
 // app/components/CollectorCard.js
 
-import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'; // ✅ Added Image import
+import React, { useEffect, useRef } from 'react';
+import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native'; // ✅ Added Animated import
 
 /**
  * ================================
@@ -47,8 +47,38 @@ const CollectorCard = ({ collector, onAssign }) => {
 
   const { name, contact, image, assignedBins, region } = collector;
 
+  /**
+   * 🌈 Animation setup
+   * Adds fade and slide-in effect when card mounts
+   */
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(20)).current; // slide up from 20px
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
   return (
-    <View style={styles.card}>
+    <Animated.View
+      style={[
+        styles.card,
+        {
+          opacity: fadeAnim,
+          transform: [{ translateY: slideAnim }],
+        },
+      ]}
+    >
       {/* Profile Section */}
       <View style={styles.profileSection}>
         {/* <Image
@@ -83,7 +113,7 @@ const CollectorCard = ({ collector, onAssign }) => {
       >
         <Text style={styles.assignText}>Assign New Bin</Text>
       </TouchableOpacity>
-    </View>
+    </Animated.View>
   );
 };
 
