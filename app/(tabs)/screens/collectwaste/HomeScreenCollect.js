@@ -1,11 +1,11 @@
-//import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import {
-    FlatList,
-    Image,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  FlatList,
+  Image,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 
 /**
@@ -16,7 +16,7 @@ import {
  * @component
  * @follows Single Responsibility Principle - Handles only dashboard display
  */
-const HomeScreen = ({ navigation }) => {
+const HomeScreenCollect = ({ navigation }) => {
   // Mock data - Replace with actual data from API/State Management
   const stats = {
     noOfBinList: 100,
@@ -400,4 +400,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default HomeScreen;
+export default HomeScreenCollect;

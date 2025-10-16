@@ -1,8 +1,7 @@
 // app/components/CollectorCard.js
 
 import React from 'react';
-import { Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native'; // ✅ Added Image import
-import profileImg from '../../assets/images/profile.jpg';
+import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'; // ✅ Added Image import
 
 /**
  * ================================
@@ -52,7 +51,7 @@ const CollectorCard = ({ collector, onAssign }) => {
     <View style={styles.card}>
       {/* Profile Section */}
       <View style={styles.profileSection}>
-        <Image
+        {/* <Image
           source={
             image
               ? { uri: image }
@@ -60,7 +59,7 @@ const CollectorCard = ({ collector, onAssign }) => {
           }
           style={styles.avatar}
           resizeMode="cover"
-        />
+        /> */}
         <View style={styles.infoSection}>
           <Text style={styles.name}>{name}</Text>
           <Text style={styles.region}>{region}</Text>

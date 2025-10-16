@@ -1,14 +1,11 @@
 // app/tabs/screens/managewaste/BinStatus.js
 
-import { Ionicons } from '@expo/vector-icons';
+//import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from 'react';
 import {
     Alert,
-    Image // ✅ Added Image import
-    ,
-
-
+    Image, // ✅ Added Image import
     ScrollView,
     StyleSheet,
     Text,
