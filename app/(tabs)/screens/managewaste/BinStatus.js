@@ -1,11 +1,12 @@
 // app/tabs/screens/managewaste/BinStatus.js
 
-//import { Ionicons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { collection, getDocs, query, where } from "firebase/firestore"; // ✅ Added Firestore imports
 import { useEffect, useState } from 'react';
 import {
     Alert,
-    Image, // ✅ Added Image import
+    Image,
     ScrollView,
     StyleSheet,
     Text,
@@ -13,10 +14,11 @@ import {
     View
 } from 'react-native';
 import CollectorCard from '../../../../components/CollectorCard';
+import { db } from '../../../../firebase';
 
 const BinStatus = () => {
     const router = useRouter();
-    const params = useLocalSearchParams(); 
+    const params = useLocalSearchParams();
     const binId = params?.binId;
 
     const [binData, setBinData] = useState({
@@ -24,15 +26,10 @@ const BinStatus = () => {
         fillLevel: 90,
         fillChange: 10,
         location: 'SMT, Motueka',
-        image: require('../../../../assets/images/bin.jpg') 
+        image: require('../../../../assets/images/bin.jpg')
     });
 
-    const [collectors, setCollectors] = useState([
-        { id: '1', name: 'Jane', distance: '2.5km Away', availability: 'Available Now', type: 'nearest', image: require('../../../../assets/images/profile.jpg') },
-        { id: '2', name: 'Kaiz', distance: '3.5km Away', availability: 'Available Now', type: 'general', image: require('../../../../assets/images/profile.jpg') },
-        { id: '3', name: 'Allan', distance: '5.0km Away', availability: 'Available Now', type: 'special', image: require('../../../../assets/images/profile.jpg') },
-    ]);
-
+    const [collectors, setCollectors] = useState([]);
     const [selectedCollectors, setSelectedCollectors] = useState([]);
 
     useEffect(() => {
@@ -49,11 +46,30 @@ const BinStatus = () => {
         }
     };
 
+    // ✅ FIXED FUNCTION
     const fetchAvailableCollectors = async () => {
         try {
-            // Placeholder for backend logic
+            // Fetch all users where userType == "collector"
+            const q = query(collection(db, "users"), where("userType", "==", "collector"));
+            const querySnapshot = await getDocs(q);
+
+            const fetchedCollectors = querySnapshot.docs.map(doc => {
+                const data = doc.data();
+                return {
+                    id: doc.id,
+                    name: data.fullName || "Unnamed Collector",
+                    distance: '2.5km Away',
+                    availability: 'Available Now',
+                    type: 'general',
+                    image: require('../../../../assets/images/profile.jpg')
+                };
+            });
+
+            setCollectors(fetchedCollectors);
+            console.log("✅ Collectors fetched:", fetchedCollectors);
         } catch (error) {
-            console.error('Error fetching collectors:', error);
+            console.error('❌ Error fetching collectors:', error);
+            Alert.alert('Error', 'Failed to load available collectors');
         }
     };
 
@@ -115,11 +131,7 @@ const BinStatus = () => {
 
     const renderBinInfo = () => (
         <View style={styles.binInfoCard}>
-            {/* ✅ Added Image display */}
-            <Image
-                source={binData.image}
-                style={styles.binImage}
-            />
+            <Image source={binData.image} style={styles.binImage} />
             <View style={styles.fillLevelContainer}>
                 <Text style={styles.fillLevelLabel}>Fill Level</Text>
                 <Text style={styles.fillLevelValue}>{binData.fillLevel}%</Text>
@@ -150,7 +162,7 @@ const BinStatus = () => {
                         onPress={() => toggleCollectorSelection(collector.id)}
                         style={[
                             styles.collectorWrapper,
-                            selectedCollectors.includes(collector.id) && styles.collectorSelected, // ✅ highlight when selected
+                            selectedCollectors.includes(collector.id) && styles.collectorSelected,
                         ]}
                         activeOpacity={0.8}
                     >
@@ -160,6 +172,12 @@ const BinStatus = () => {
                         />
                     </TouchableOpacity>
                 ))}
+
+                {collectors.length === 0 && (
+                    <Text style={{ textAlign: "center", marginTop: 10, color: "#666" }}>
+                        No collectors found.
+                    </Text>
+                )}
             </View>
         </View>
     );
@@ -173,7 +191,6 @@ const BinStatus = () => {
                 <Text style={styles.removeButtonText}>Remove from Review</Text>
             </TouchableOpacity>
 
-            {/* ✅ Disable button when no collector selected */}
             <TouchableOpacity
                 style={[
                     styles.addToRouteButton,
@@ -224,7 +241,7 @@ const BinStatus = () => {
     );
 };
 
-// ✅ Added style for bin image
+// ✅ All your original styles kept 100% unchanged
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F5F5F5' },
   scrollView: { flex: 1 },
@@ -238,7 +255,7 @@ const styles = StyleSheet.create({
   titleBar: { backgroundColor: '#E8E8E8', paddingVertical: 12, paddingHorizontal: 20 },
   titleText: { fontSize: 16, fontWeight: '500' },
   binInfoCard: { backgroundColor: '#FFF', marginHorizontal: 20, marginTop: 20, padding: 20, borderRadius: 10, flexDirection: 'row', alignItems: 'center' },
-  binImage: { width: 80, height: 80, borderRadius: 10, resizeMode: 'cover', marginRight: 15 }, // ✅ bin image style
+  binImage: { width: 80, height: 80, borderRadius: 10, resizeMode: 'cover', marginRight: 15 },
   fillLevelContainer: { flex: 1, marginLeft: 20 },
   fillLevelLabel: { fontSize: 12, color: '#666' },
   fillLevelValue: { fontSize: 32, fontWeight: 'bold', color: '#000' },

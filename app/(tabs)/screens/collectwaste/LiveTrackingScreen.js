@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { MapView } from 'react-native-maps';
+import MapView, { Marker, Polyline } from 'react-native-maps';
 
 /**
  * LiveTrackingScreen Component
