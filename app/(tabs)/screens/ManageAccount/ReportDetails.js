@@ -1,5 +1,4 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { collection, doc, getDoc, getDocs } from 'firebase/firestore';
 import {
     ArrowLeft,
     BarChart3,
@@ -25,6 +24,12 @@ import {
 } from 'react-native';
 import { auth, db } from '../../../../firebase';
 import { ReportExportService } from '../../../../services/ReportExportService';
+import { ReportDataService } from '../../../../services/ReportDataService';
+import { ReportAuthorizationService } from '../../../../services/ReportAuthorizationService';
+import { ReportFactory } from '../../../../services/ReportFactory';
+import { ReportDataProcessor } from '../../../../services/ReportDataProcessor';
+import { ReportKPIService } from '../../../../services/ReportKPIService';
+import { ReportChartService } from '../../../../services/ReportChartService';
 
 const { width } = Dimensions.get('window');
 
@@ -37,6 +42,14 @@ export default function ReportDetails() {
   const [isAuthorized, setIsAuthorized] = useState(false);
 
   const parsedFilters = filters ? JSON.parse(filters) : {};
+
+  // Initialize services
+  const dataService = new ReportDataService(db);
+  const authService = new ReportAuthorizationService(auth, db);
+  const dataProcessor = new ReportDataProcessor();
+  const reportFactory = new ReportFactory(dataService, dataProcessor);
+  const kpiService = new ReportKPIService();
+  const chartService = new ReportChartService();
 
   useEffect(() => {
     checkAuthorization();
@@ -52,47 +65,20 @@ export default function ReportDetails() {
     try {
       setLoading(true);
       
-      // Check if user is authenticated
-      const currentUser = auth.currentUser;
-      if (!currentUser) {
-        Alert.alert(
-          'Access Denied',
-          'You must be logged in to access reports.',
-          [{ text: 'OK', onPress: () => router.back() }]
-        );
-        return;
-      }
-
-      // Fetch user data to check role
-      const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
-      if (!userDoc.exists()) {
-        Alert.alert(
-          'Access Denied',
-          'User data not found. Please contact support.',
-          [{ text: 'OK', onPress: () => router.back() }]
-        );
-        return;
-      }
-
-      const userData = userDoc.data();
-
-      // Check if user is admin (business user)
-      if (userData.userType !== 'business') {
-        Alert.alert(
-          'Access Denied',
-          'Reports & Analytics is only available to administrators.',
-          [{ text: 'OK', onPress: () => router.back() }]
-        );
-        return;
-      }
-
-      // User is authorized
+      // Use authorization service to validate access
+      await authService.validateAuthorization();
       setIsAuthorized(true);
     } catch (error) {
       console.error('Authorization error:', error);
+      const errorMessage = error.message === 'User not authenticated' 
+        ? 'You must be logged in to access reports.'
+        : error.message === 'User not authorized for reports'
+        ? 'Reports & Analytics is only available to administrators.'
+        : 'Failed to verify access permissions.';
+        
       Alert.alert(
-        'Error',
-        'Failed to verify access permissions.',
+        'Access Denied',
+        errorMessage,
         [{ text: 'OK', onPress: () => router.back() }]
       );
     } finally {
@@ -104,25 +90,11 @@ export default function ReportDetails() {
     try {
       setLoading(true);
       
-      // Fetch data based on report type
-      let data = {};
-      
-      switch (reportType) {
-        case 'waste-generation':
-          data = await fetchWasteGenerationData();
-          break;
-        case 'collection-efficiency':
-          data = await fetchCollectionEfficiencyData();
-          break;
-        case 'cost-analysis':
-          data = await fetchCostAnalysisData();
-          break;
-        default:
-          throw new Error('Invalid report type');
-      }
+      // Use report factory to create report
+      const data = await reportFactory.createReport(reportType, parsedFilters);
       
       setReportData(data);
-      setChartData(processChartData(data, reportType));
+      setChartData(chartService.processChartData(data, reportType));
     } catch (error) {
       console.error('Error generating report:', error);
       Alert.alert('Error', 'Failed to generate report');
@@ -131,220 +103,34 @@ export default function ReportDetails() {
     }
   };
 
-  const fetchWasteGenerationData = async () => {
-    const [collectionsSnapshot, schedulesSnapshot] = await Promise.all([
-      getDocs(collection(db, 'garbageCollections')),
-      getDocs(collection(db, 'schedules'))
-    ]);
 
-    const collections = [];
-    const schedules = [];
 
-    collectionsSnapshot.forEach(doc => collections.push({ id: doc.id, ...doc.data() }));
-    schedulesSnapshot.forEach(doc => schedules.push({ id: doc.id, ...doc.data() }));
-
-    // Filter by date range if specified
-    const filteredCollections = filterByDateRange(collections, parsedFilters.dateRange);
-    const filteredSchedules = filterByDateRange(schedules, parsedFilters.dateRange);
-
-    // Calculate metrics
-    const totalWeight = filteredCollections.reduce((sum, col) => sum + parseFloat(col.totalWeight || 0), 0);
-    const totalCollections = filteredCollections.length;
-    const averageWeight = totalCollections > 0 ? totalWeight / totalCollections : 0;
-
-    // Group by area
-    const byArea = {};
-    filteredCollections.forEach(col => {
-      const area = col.address?.split(',')[1]?.trim() || 'Unknown';
-      if (!byArea[area]) byArea[area] = { count: 0, weight: 0 };
-      byArea[area].count++;
-      byArea[area].weight += parseFloat(col.totalWeight || 0);
-    });
-
-    // Group by waste type
-    const byWasteType = {};
-    filteredCollections.forEach(col => {
-      const wasteType = col.wasteType || 'Mixed';
-      if (!byWasteType[wasteType]) byWasteType[wasteType] = { count: 0, weight: 0 };
-      byWasteType[wasteType].count++;
-      byWasteType[wasteType].weight += parseFloat(col.totalWeight || 0);
-    });
-
-    return {
-      totalWeight: totalWeight || 0,
-      totalCollections: totalCollections || 0,
-      averageWeight: averageWeight || 0,
-      byArea: byArea || {},
-      byWasteType: byWasteType || {},
-      collections: filteredCollections || [],
-      schedules: filteredSchedules || []
+  const getIconComponent = (iconName) => {
+    const iconMap = {
+      'BarChart3': BarChart3,
+      'Calendar': Calendar,
+      'DollarSign': DollarSign,
+      'TrendingUp': TrendingUp
     };
+    return iconMap[iconName] || BarChart3;
   };
-
-  const fetchCollectionEfficiencyData = async () => {
-    const [collectionsSnapshot, schedulesSnapshot] = await Promise.all([
-      getDocs(collection(db, 'garbageCollections')),
-      getDocs(collection(db, 'schedules'))
-    ]);
-
-    const collections = [];
-    const schedules = [];
-
-    collectionsSnapshot.forEach(doc => collections.push({ id: doc.id, ...doc.data() }));
-    schedulesSnapshot.forEach(doc => schedules.push({ id: doc.id, ...doc.data() }));
-
-    const filteredCollections = filterByDateRange(collections, parsedFilters.dateRange);
-    const filteredSchedules = filterByDateRange(schedules, parsedFilters.dateRange);
-
-    // Calculate efficiency metrics
-    const scheduledPickups = filteredSchedules.length;
-    const completedPickups = filteredCollections.length;
-    const efficiencyRate = scheduledPickups > 0 ? (completedPickups / scheduledPickups) * 100 : 0;
-
-    // Group by status
-    const statusBreakdown = {
-      'Completed': completedPickups,
-      'Scheduled': filteredSchedules.filter(s => s.status === 'Scheduled').length,
-      'Cancelled': filteredSchedules.filter(s => s.status === 'Cancelled').length,
-      'In Progress': filteredSchedules.filter(s => s.status === 'In Progress').length
-    };
-
-    return {
-      scheduledPickups: scheduledPickups || 0,
-      completedPickups: completedPickups || 0,
-      efficiencyRate: efficiencyRate || 0,
-      statusBreakdown: statusBreakdown || {},
-      collections: filteredCollections || [],
-      schedules: filteredSchedules || []
-    };
-  };
-
-
-  const fetchCostAnalysisData = async () => {
-    const collectionsSnapshot = await getDocs(collection(db, 'garbageCollections'));
-    const collections = [];
-    collectionsSnapshot.forEach(doc => collections.push({ id: doc.id, ...doc.data() }));
-
-    const filteredCollections = filterByDateRange(collections, parsedFilters.dateRange);
-
-    // Calculate financial metrics
-    const totalRevenue = filteredCollections.reduce((sum, col) => sum + parseFloat(col.totalCost || 0), 0);
-    const averageCost = filteredCollections.length > 0 ? totalRevenue / filteredCollections.length : 0;
-
-    // Group by payment status
-    const paymentStatus = {
-      'Paid': filteredCollections.filter(col => col.status === 'Paid').length,
-      'Unpaid': filteredCollections.filter(col => col.status === 'Unpaid').length,
-      'Pending Verification': filteredCollections.filter(col => col.status === 'Pending Verification').length
-    };
-
-    const paidRevenue = filteredCollections
-      .filter(col => col.status === 'Paid')
-      .reduce((sum, col) => sum + parseFloat(col.totalCost || 0), 0);
-
-    return {
-      totalRevenue: totalRevenue || 0,
-      averageCost: averageCost || 0,
-      paidRevenue: paidRevenue || 0,
-      paymentStatus: paymentStatus || {},
-      collections: filteredCollections || []
-    };
-  };
-
-
-
-  const filterByDateRange = (data, dateRange) => {
-    if (!dateRange || !dateRange.startDate || !dateRange.endDate) return data;
-    
-    const startDate = new Date(dateRange.startDate);
-    const endDate = new Date(dateRange.endDate);
-    
-    return data.filter(item => {
-      const itemDate = new Date(item.createdAt?.toDate?.() || item.createdAt);
-      return itemDate >= startDate && itemDate <= endDate;
-    });
-  };
-
-  const processChartData = (data, reportType) => {
-    switch (reportType) {
-      case 'waste-generation':
-        return {
-          pieChart: Object.entries(data.byWasteType).map(([type, stats]) => ({
-            name: type,
-            value: stats.weight,
-            color: getWasteTypeColor(type)
-          })),
-          barChart: Object.entries(data.byArea).map(([area, stats]) => ({
-            name: area,
-            value: stats.weight
-          }))
-        };
-      case 'collection-efficiency':
-        return {
-          pieChart: Object.entries(data.statusBreakdown).map(([status, count]) => ({
-            name: status,
-            value: count,
-            color: getStatusColor(status)
-          }))
-        };
-      case 'cost-analysis':
-        return {
-          pieChart: Object.entries(data.paymentStatus).map(([status, count]) => ({
-            name: status,
-            value: count,
-            color: getPaymentStatusColor(status)
-          }))
-        };
-      default:
-        return null;
-    }
-  };
-
-  const getWasteTypeColor = (type) => {
-    const colors = {
-      'Organic': '#10B981',
-      'Recyclable': '#3B82F6',
-      'Electronic': '#F59E0B',
-      'Mixed': '#6B7280'
-    };
-    return colors[type] || '#6B7280';
-  };
-
-  const getStatusColor = (status) => {
-    const colors = {
-      'Completed': '#10B981',
-      'Scheduled': '#3B82F6',
-      'Cancelled': '#EF4444',
-      'In Progress': '#F59E0B'
-    };
-    return colors[status] || '#6B7280';
-  };
-
-
-  const getPaymentStatusColor = (status) => {
-    const colors = {
-      'Paid': '#10B981',
-      'Unpaid': '#EF4444',
-      'Pending Verification': '#F59E0B'
-    };
-    return colors[status] || '#6B7280';
-  };
-
 
   const renderKPICards = () => {
     if (!reportData) return null;
 
-    const kpis = getKPIsForReportType(reportType, reportData);
+    const kpis = kpiService.getKPIsForReportType(reportType, reportData);
     
     return (
       <View style={styles.kpiSection}>
         <Text style={styles.sectionTitle}>Key Performance Indicators</Text>
         <View style={styles.kpiGrid}>
-          {kpis.map((kpi, index) => (
+          {kpis.map((kpi, index) => {
+            const IconComponent = getIconComponent(kpi.icon);
+            return (
             <View key={index} style={styles.kpiCard}>
               <View style={styles.kpiHeader}>
                 <View style={[styles.kpiIcon, { backgroundColor: kpi.color }]}>
-                  {kpi.icon}
+                    <IconComponent size={20} color="white" />
                 </View>
                 <View style={styles.kpiTrend}>
                   {kpi.trend === 'up' ? (
@@ -357,90 +143,13 @@ export default function ReportDetails() {
               <Text style={styles.kpiValue}>{kpi.value}</Text>
               <Text style={styles.kpiLabel}>{kpi.label}</Text>
             </View>
-          ))}
+            );
+          })}
         </View>
       </View>
     );
   };
 
-  const getKPIsForReportType = (type, data) => {
-    switch (type) {
-      case 'waste-generation':
-        return [
-          {
-            label: 'Total Weight (kg)',
-            value: (data.totalWeight || 0).toFixed(1),
-            icon: <BarChart3 size={20} color="white" />,
-            color: '#10B981',
-            trend: 'up'
-          },
-          {
-            label: 'Total Collections',
-            value: data.totalCollections || 0,
-            icon: <Calendar size={20} color="white" />,
-            color: '#3B82F6',
-            trend: 'up'
-          },
-          {
-            label: 'Average Weight (kg)',
-            value: (data.averageWeight || 0).toFixed(1),
-            icon: <TrendingUp size={20} color="white" />,
-            color: '#F59E0B',
-            trend: 'up'
-          }
-        ];
-      case 'collection-efficiency':
-        return [
-          {
-            label: 'Efficiency Rate',
-            value: `${(data.efficiencyRate || 0).toFixed(1)}%`,
-            icon: <TrendingUp size={20} color="white" />,
-            color: '#10B981',
-            trend: 'up'
-          },
-          {
-            label: 'Scheduled Pickups',
-            value: data.scheduledPickups || 0,
-            icon: <Calendar size={20} color="white" />,
-            color: '#3B82F6',
-            trend: 'up'
-          },
-          {
-            label: 'Completed Pickups',
-            value: data.completedPickups || 0,
-            icon: <BarChart3 size={20} color="white" />,
-            color: '#F59E0B',
-            trend: 'up'
-          }
-        ];
-      case 'cost-analysis':
-        return [
-          {
-            label: 'Total Revenue',
-            value: `$${(data.totalRevenue || 0).toFixed(2)}`,
-            icon: <DollarSign size={20} color="white" />,
-            color: '#10B981',
-            trend: 'up'
-          },
-          {
-            label: 'Average Cost',
-            value: `$${(data.averageCost || 0).toFixed(2)}`,
-            icon: <TrendingUp size={20} color="white" />,
-            color: '#3B82F6',
-            trend: 'up'
-          },
-          {
-            label: 'Paid Revenue',
-            value: `$${(data.paidRevenue || 0).toFixed(2)}`,
-            icon: <DollarSign size={20} color="white" />,
-            color: '#F59E0B',
-            trend: 'up'
-          }
-        ];
-      default:
-        return [];
-    }
-  };
 
   const renderSimpleChart = () => {
     if (!chartData) return null;
@@ -503,6 +212,8 @@ export default function ReportDetails() {
     return titles[reportType] || 'Report';
   };
 
+  const exportService = new ReportExportService();
+
   const handleExportPDF = async () => {
     if (!reportData) {
       Alert.alert('Error', 'No report data available to export');
@@ -510,7 +221,7 @@ export default function ReportDetails() {
     }
 
     try {
-      await ReportExportService.exportToPDF(
+      await exportService.exportToPDF(
         reportData, 
         reportType, 
         parsedFilters, 
@@ -529,7 +240,7 @@ export default function ReportDetails() {
     }
 
     try {
-      await ReportExportService.exportToCSV(reportData, reportType, parsedFilters);
+      await exportService.exportToCSV(reportData, reportType, parsedFilters);
     } catch (error) {
       console.error('Export error:', error);
       Alert.alert('Error', 'Failed to export CSV');

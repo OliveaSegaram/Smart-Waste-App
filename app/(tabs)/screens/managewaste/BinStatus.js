@@ -2,7 +2,7 @@
 
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { collection, getDocs, query, where } from "firebase/firestore"; // ✅ Added Firestore imports
+import { collection, getDocs, query, where } from "firebase/firestore"; 
 import { useEffect, useState } from 'react';
 import {
     Alert,

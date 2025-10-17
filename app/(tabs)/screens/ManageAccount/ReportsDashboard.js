@@ -1,6 +1,5 @@
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { collection, doc, getDoc, getDocs } from 'firebase/firestore';
 import {
     BarChart3,
     Calendar,
@@ -25,6 +24,8 @@ import {
     View
 } from 'react-native';
 import { auth, db } from '../../../../firebase';
+import { ReportDataService } from '../../../../services/ReportDataService';
+import { ReportAuthorizationService } from '../../../../services/ReportAuthorizationService';
 
 export default function ReportsDashboard() {
   const router = useRouter();
@@ -44,6 +45,10 @@ export default function ReportsDashboard() {
     area: 'All',
     wasteType: 'All'
   });
+
+  // Initialize services
+  const dataService = new ReportDataService(db);
+  const authService = new ReportAuthorizationService(auth, db);
 
   const reportTypes = [
     {
@@ -79,49 +84,27 @@ export default function ReportsDashboard() {
     try {
       setLoading(true);
       
-      // Check if user is authenticated
-      const currentUser = auth.currentUser;
-      if (!currentUser) {
-        Alert.alert(
-          'Access Denied',
-          'You must be logged in to access reports.',
-          [{ text: 'OK', onPress: () => router.back() }]
-        );
-        return;
-      }
-
-      // Fetch user data to check role
-      const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
-      if (!userDoc.exists()) {
-        Alert.alert(
-          'Access Denied',
-          'User data not found. Please contact support.',
-          [{ text: 'OK', onPress: () => router.back() }]
-        );
-        return;
-      }
-
-      const userData = userDoc.data();
+      // Use authorization service to validate access
+      const currentUser = await authService.validateAuthorization();
+      
+      // Fetch user data
+      const userData = await dataService.fetchUserById(currentUser.uid);
       setUserData(userData);
-
-      // Check if user is admin (business user)
-      if (userData.userType !== 'business') {
-        Alert.alert(
-          'Access Denied',
-          'Reports & Analytics is only available to administrators.',
-          [{ text: 'OK', onPress: () => router.back() }]
-        );
-        return;
-      }
 
       // User is authorized, fetch data
       setIsAuthorized(true);
       await fetchOverviewData();
     } catch (error) {
       console.error('Authorization error:', error);
+      const errorMessage = error.message === 'User not authenticated' 
+        ? 'You must be logged in to access reports.'
+        : error.message === 'User not authorized for reports'
+        ? 'Reports & Analytics is only available to administrators.'
+        : 'Failed to verify access permissions.';
+        
       Alert.alert(
-        'Error',
-        'Failed to verify access permissions.',
+        'Access Denied',
+        errorMessage,
         [{ text: 'OK', onPress: () => router.back() }]
       );
     } finally {
@@ -132,30 +115,9 @@ export default function ReportsDashboard() {
   const fetchOverviewData = async () => {
     try {
       setLoading(true);
-      // Fetch basic overview data for dashboard
-      const [collectionsSnapshot, schedulesSnapshot, usersSnapshot] = await Promise.all([
-        getDocs(collection(db, 'garbageCollections')),
-        getDocs(collection(db, 'schedules')),
-        getDocs(collection(db, 'users'))
-      ]);
-
-      const collections = [];
-      const schedules = [];
-      const users = [];
-
-      collectionsSnapshot.forEach(doc => collections.push({ id: doc.id, ...doc.data() }));
-      schedulesSnapshot.forEach(doc => schedules.push({ id: doc.id, ...doc.data() }));
-      usersSnapshot.forEach(doc => users.push({ id: doc.id, ...doc.data() }));
-
-      setReportData({
-        totalCollections: collections.length,
-        totalSchedules: schedules.length,
-        totalUsers: users.length,
-        totalRevenue: collections.reduce((sum, col) => sum + parseFloat(col.totalCost || 0), 0),
-        collections,
-        schedules,
-        users
-      });
+      // Use data service to fetch overview data
+      const overviewData = await dataService.fetchOverviewData();
+      setReportData(overviewData);
     } catch (error) {
       console.error('Error fetching overview data:', error);
       Alert.alert('Error', 'Failed to load report data');
