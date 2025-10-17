@@ -1,6 +1,15 @@
 import 'react-native-gesture-handler/jestSetup';
 
 // Mock expo modules
+import '@testing-library/jest-native/extend-expect';
+
+// Suppress RN warnings
+jest.mock('react-native/Libraries/Animated/NativeAnimatedHelper');
+
+// Mock reanimated (required by many RN components)
+jest.mock('react-native-reanimated', () => require('react-native-reanimated/mock'));
+
+// Mock Expo Router globally
 jest.mock('expo-router', () => ({
   useRouter: () => ({
     push: jest.fn(),
@@ -43,3 +52,8 @@ jest.mock('firebase/firestore', () => ({
 
 // Silence the warning: Animated: `useNativeDriver` is not supported
 jest.mock('react-native/Libraries/Animated/NativeAnimatedHelper');
+}));
+
+// Mock images
+jest.mock('../../assets/images/profile.jpg', () => 1);
+jest.mock('../../assets/images/bin.jpg', () => 1);
