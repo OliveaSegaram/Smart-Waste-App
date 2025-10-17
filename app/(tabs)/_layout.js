@@ -1,7 +1,6 @@
-import { Tabs } from "expo-router";
-import { Home, FileText, Star, Trash2, History } from "lucide-react-native";
-import { StyleSheet, View, Text, Platform } from "react-native";
-import { usePathname } from "expo-router";
+import { Tabs, usePathname } from "expo-router";
+import { BarChart3, FileText, History, Home, Star, Trash2 } from "lucide-react-native";
+import { Platform, StyleSheet, View } from "react-native";
 
 export default function TabLayout() {
   const pathname = usePathname();
@@ -137,6 +136,32 @@ export default function TabLayout() {
                 ]}
               >
                 <Trash2
+                  size={24}
+                  color={focused ? "#10B981" : color}
+                  strokeWidth={2.5}
+                />
+              </View>
+              {focused && (
+                <View style={styles.activeIndicator} />
+              )}
+            </View>
+          ),
+        }}
+      />
+
+      <Tabs.Screen
+        name="screens/ManageAccount/ReportsDashboard"
+        options={{
+          title: "Reports",
+          tabBarIcon: ({ color, focused }) => (
+            <View style={styles.navItem}>
+              <View
+                style={[
+                  styles.iconContainer,
+                  focused && styles.iconContainerActive,
+                ]}
+              >
+                <BarChart3
                   size={24}
                   color={focused ? "#10B981" : color}
                   strokeWidth={2.5}

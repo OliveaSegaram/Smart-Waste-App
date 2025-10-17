@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, SafeAreaView, ActivityIndicator, Modal, TextInput, Alert } from 'react-native';
-import { DollarSign, Trash2, Award, Calendar, Bell, User, LogOut, Edit2, X, MapPin, Phone, Mail } from 'lucide-react-native';
-import { useRouter, useFocusEffect, useLocalSearchParams } from 'expo-router';
-import { collection, getDocs, query, orderBy, limit, where, doc, getDoc, updateDoc } from 'firebase/firestore';
-import { db, auth } from '../../../../firebase';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { signOut } from 'firebase/auth';
+import { collection, doc, getDoc, getDocs, limit, orderBy, query, updateDoc, where } from 'firebase/firestore';
+import { Award, Bell, Calendar, DollarSign, Edit2, LogOut, Mail, MapPin, Phone, Trash2, User, X } from 'lucide-react-native';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, Modal, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { auth, db } from '../../../../firebase';
 
 export default function DashboardScreen() {
   const router = useRouter();
@@ -423,6 +423,7 @@ export default function DashboardScreen() {
     router.push('/(tabs)/screens/ManageAccount/ScheduleScreen');
   };
 
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.container}>
@@ -599,6 +600,7 @@ export default function DashboardScreen() {
               )}
             </View>
           </View>
+
         </ScrollView>
 
         {/* Notification Modal */}

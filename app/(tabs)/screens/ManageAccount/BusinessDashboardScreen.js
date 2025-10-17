@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, StyleSheet, SafeAreaView, TextInput, Modal, Alert, ActivityIndicator } from 'react-native';
-import { Trash2, Award, Calendar, Bell, TrendingUp, Users, Package, X, Clock, MapPin, Edit2, Plus } from 'lucide-react-native';
-import { useRouter, useFocusEffect } from 'expo-router';
-import { collection, addDoc, getDocs, query, orderBy, where, limit, deleteDoc, doc, updateDoc } from 'firebase/firestore';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { addDoc, collection, deleteDoc, doc, getDocs, limit, orderBy, query, updateDoc } from 'firebase/firestore';
+import { Award, BarChart3, Bell, Calendar, Clock, Edit2, MapPin, Package, Plus, Trash2, TrendingUp, Users, X } from 'lucide-react-native';
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, Alert, Modal, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { db } from '../../../../firebase';
 
 export default function BusinessDashboardScreen() {
@@ -288,6 +288,10 @@ export default function BusinessDashboardScreen() {
 
   const totalRevenue = garbageRecords.reduce((sum, record) => sum + parseFloat(record.totalCost || 0), 0);
 
+  const handleViewReports = () => {
+    router.push('/(tabs)/screens/ManageAccount/ReportsDashboard');
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.container}>
@@ -479,6 +483,24 @@ export default function BusinessDashboardScreen() {
                 <Text style={styles.emptyStateText}>No scheduled pickups yet</Text>
               </View>
             )}
+          </View>
+
+          {/* Reports & Analytics Section */}
+          <View style={styles.reportsSection}>
+            <TouchableOpacity style={styles.reportsButton} onPress={handleViewReports}>
+              <View style={styles.reportsButtonContent}>
+                <View style={styles.reportsIconContainer}>
+                  <BarChart3 size={28} color="#5DADE2" strokeWidth={2.5} />
+                </View>
+                <View style={styles.reportsTextContainer}>
+                  <Text style={styles.reportsButtonTitle}>Reports & Analytics</Text>
+                  <Text style={styles.reportsButtonSubtitle}>View system insights and performance metrics</Text>
+                </View>
+                <View style={styles.reportsArrow}>
+                  <Text style={styles.reportsArrowText}>→</Text>
+                </View>
+              </View>
+            </TouchableOpacity>
           </View>
 
           <View style={styles.bottomPadding} />
@@ -713,4 +735,52 @@ const styles = StyleSheet.create({
   modalCancelText: { fontSize: 16, color: '#6B7280', fontWeight: '600' },
   modalSaveButton: { flex: 1, paddingVertical: 14, borderRadius: 8, backgroundColor: '#10B981', alignItems: 'center' },
   modalSaveText: { fontSize: 16, color: 'white', fontWeight: '600' },
+  reportsSection: { marginTop: 24, marginBottom: 16 },
+  reportsButton: {
+    backgroundColor: 'white',
+    borderRadius: 16,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+  },
+  reportsButtonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  reportsIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#F0F9FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  reportsTextContainer: {
+    flex: 1,
+  },
+  reportsButtonTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#111827',
+    marginBottom: 4,
+  },
+  reportsButtonSubtitle: {
+    fontSize: 14,
+    color: '#6B7280',
+    lineHeight: 20,
+  },
+  reportsArrow: {
+    marginLeft: 12,
+  },
+  reportsArrowText: {
+    fontSize: 24,
+    color: '#5DADE2',
+    fontWeight: 'bold',
+  },
 });

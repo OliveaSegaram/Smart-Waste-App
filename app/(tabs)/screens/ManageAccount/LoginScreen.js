@@ -1,23 +1,23 @@
 
+import { useRouter } from "expo-router";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+import { Eye, EyeOff, Lock, Mail, Trash2 } from "lucide-react-native";
 import React, { useState } from "react";
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  KeyboardAvoidingView,
-  Platform,
-  Alert,
-  SafeAreaView,
-  ScrollView,
-  ActivityIndicator
+    ActivityIndicator,
+    Alert,
+    KeyboardAvoidingView,
+    Platform,
+    SafeAreaView,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View
 } from "react-native";
-import { Trash2, Mail, Lock, Eye, EyeOff } from "lucide-react-native";
-import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth, db } from "../../../../firebase";
-import { doc, getDoc } from "firebase/firestore";
-import { useRouter } from "expo-router";
 
 const COLORS = {
   primary: "#5DADE2",
@@ -130,6 +130,7 @@ const LoginScreen = () => {
   const handleForgotPassword = () => {
     Alert.alert("Forgot Password", "Password reset feature coming soon!");
   };
+
 
   return (
     <SafeAreaView style={styles.safeArea}>
