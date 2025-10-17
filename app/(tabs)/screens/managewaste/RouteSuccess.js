@@ -77,6 +77,7 @@ const RouteSuccess = ({ navigation }) => {
 
   const renderActionButton = () => (
     <TouchableOpacity
+    testID="back-to-dashboard-btn"
       style={styles.backButton}
       onPress={handleBackToDashboard}
       activeOpacity={0.8}
