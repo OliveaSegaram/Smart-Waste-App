@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import {
   View,
@@ -12,27 +13,22 @@ import {
   ScrollView,
   ActivityIndicator
 } from "react-native";
-import {
-  Trash2,
-  Mail,
-  Lock,
-  Eye,
-  EyeOff,
-} from "lucide-react-native";
+import { Trash2, Mail, Lock, Eye, EyeOff } from "lucide-react-native";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth, db } from "../../../../firebase";
 import { doc, getDoc } from "firebase/firestore";
 import { useRouter } from "expo-router";
 
 const COLORS = {
-  primary: "#10b981",
+  primary: "#5DADE2",
   secondary: "#6b7280",
+  accent: "#10B981",
   error: "#ef4444",
   white: "#ffffff",
-  background: "#f9fafb",
-  border: "#e5e7eb",
+  background: "#F9FAFB",
+  border: "#E5E7EB",
   text: "#111827",
-  textLight: "#6b7280",
+  textLight: "#6B7280",
 };
 
 const LoginScreen = () => {
@@ -60,13 +56,11 @@ const LoginScreen = () => {
     try {
       console.log("Attempting login...");
       
-      // Sign in with Firebase Authentication
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const user = userCredential.user;
       
       console.log("Firebase Auth successful, fetching user data...");
 
-      // Fetch user data from Firestore
       const userDoc = await getDoc(doc(db, "users", user.uid));
       
       if (!userDoc.exists()) {
@@ -85,17 +79,12 @@ const LoginScreen = () => {
         {
           text: "OK",
           onPress: () => {
-            // Navigate to Home screen with user data using Expo Router
-            router.replace({
-              pathname: "/(tabs)/screens/ManageAccount/HomeScreen",
-              params: { 
-                uid: user.uid,
-                fullName: userData.fullName || "User",
-                email: userData.email || user.email,
-                userType: userRole,
-                phoneNumber: userData.phoneNumber || "",
-              }
-            });
+            // Navigate based on user role
+            if (userRole === "business") {
+              router.replace("/(tabs)/screens/ManageAccount/BusinessDashboardScreen");
+            } else {
+              router.replace("/(tabs)/screens/ManageAccount/DashboardScreen");
+            }
           }
         }
       ]);
@@ -119,7 +108,7 @@ const LoginScreen = () => {
           errorMessage = "Incorrect password. Please try again.";
           break;
         case "auth/network-request-failed":
-          errorMessage = "Network error. Please check your internet connection.";
+          errorMessage = "Network error. Please check your connection.";
           break;
         case "auth/too-many-requests":
           errorMessage = "Too many failed attempts. Please try again later.";
@@ -171,11 +160,7 @@ const LoginScreen = () => {
               <View style={styles.inputContainer}>
                 <Text style={styles.inputLabel}>Email</Text>
                 <View style={styles.inputWrapper}>
-                  <Mail
-                    size={20}
-                    color={COLORS.secondary}
-                    style={styles.inputIcon}
-                  />
+                  <Mail size={20} color={COLORS.secondary} style={styles.inputIcon} />
                   <TextInput
                     style={styles.input}
                     placeholder="Enter your email"
@@ -184,7 +169,6 @@ const LoginScreen = () => {
                     onChangeText={setEmail}
                     keyboardType="email-address"
                     autoCapitalize="none"
-                    autoComplete="email"
                     editable={!loading}
                   />
                 </View>
@@ -193,11 +177,7 @@ const LoginScreen = () => {
               <View style={styles.inputContainer}>
                 <Text style={styles.inputLabel}>Password</Text>
                 <View style={styles.inputWrapper}>
-                  <Lock
-                    size={20}
-                    color={COLORS.secondary}
-                    style={styles.inputIcon}
-                  />
+                  <Lock size={20} color={COLORS.secondary} style={styles.inputIcon} />
                   <TextInput
                     style={styles.input}
                     placeholder="Enter your password"
@@ -206,7 +186,6 @@ const LoginScreen = () => {
                     onChangeText={setPassword}
                     secureTextEntry={!showPassword}
                     autoCapitalize="none"
-                    autoComplete="password"
                     editable={!loading}
                   />
                   <TouchableOpacity
@@ -229,12 +208,7 @@ const LoginScreen = () => {
                   onPress={() => setRememberMe(!rememberMe)}
                   disabled={loading}
                 >
-                  <View
-                    style={[
-                      styles.checkbox,
-                      rememberMe && styles.checkboxActive,
-                    ]}
-                  >
+                  <View style={[styles.checkbox, rememberMe && styles.checkboxActive]}>
                     {rememberMe && <View style={styles.checkboxInner} />}
                   </View>
                   <Text style={styles.rememberMeText}>Remember me</Text>
@@ -246,10 +220,7 @@ const LoginScreen = () => {
               </View>
 
               <TouchableOpacity 
-                style={[
-                  styles.loginButton, 
-                  loading && styles.loginButtonDisabled
-                ]} 
+                style={[styles.loginButton, loading && styles.loginButtonDisabled]} 
                 onPress={handleLogin}
                 disabled={loading}
               >
@@ -284,17 +255,9 @@ const LoginScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: COLORS.primary,
-  },
-  container: { 
-    flex: 1, 
-    backgroundColor: COLORS.background 
-  },
-  scrollContent: {
-    flexGrow: 1,
-  },
+  safeArea: { flex: 1, backgroundColor: COLORS.primary },
+  container: { flex: 1, backgroundColor: COLORS.background },
+  scrollContent: { flexGrow: 1 },
   header: {
     backgroundColor: COLORS.primary,
     paddingTop: 40,
@@ -318,44 +281,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 20,
   },
-  title: {
-    fontSize: 32,
-    fontWeight: "bold",
-    color: COLORS.white,
-    marginBottom: 10,
-    letterSpacing: 0.5,
-  },
-  subtitle: { 
-    fontSize: 15, 
-    color: "rgba(255, 255, 255, 0.9)", 
-    textAlign: "center",
-    paddingHorizontal: 20,
-  },
-  formContainer: {
-    flex: 1,
-    paddingTop: 30,
-  },
-  form: { 
-    paddingHorizontal: 24,
-    paddingBottom: 40,
-  },
-  formTitle: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: COLORS.text,
-    marginBottom: 24,
-    textAlign: "center",
-  },
-  inputContainer: { 
-    marginBottom: 20,
-  },
-  inputLabel: {
-    fontSize: 14,
-    fontWeight: "600",
-    color: COLORS.text,
-    marginBottom: 8,
-    marginLeft: 4,
-  },
+  title: { fontSize: 32, fontWeight: "bold", color: COLORS.white, marginBottom: 10 },
+  subtitle: { fontSize: 15, color: "rgba(255, 255, 255, 0.9)", textAlign: "center" },
+  formContainer: { flex: 1, paddingTop: 30 },
+  form: { paddingHorizontal: 24, paddingBottom: 40 },
+  formTitle: { fontSize: 22, fontWeight: "700", color: COLORS.text, marginBottom: 24, textAlign: "center" },
+  inputContainer: { marginBottom: 20 },
+  inputLabel: { fontSize: 14, fontWeight: "600", color: COLORS.text, marginBottom: 8, marginLeft: 4 },
   inputWrapper: {
     flexDirection: "row",
     alignItems: "center",
@@ -370,18 +302,9 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-  inputIcon: { 
-    marginRight: 12,
-  },
-  input: { 
-    flex: 1, 
-    paddingVertical: 14,
-    fontSize: 15, 
-    color: COLORS.text,
-  },
-  eyeIcon: { 
-    padding: 8,
-  },
+  inputIcon: { marginRight: 12 },
+  input: { flex: 1, paddingVertical: 14, fontSize: 15, color: COLORS.text },
+  eyeIcon: { padding: 8 },
   optionsContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -389,10 +312,7 @@ const styles = StyleSheet.create({
     marginBottom: 28,
     marginTop: 4,
   },
-  rememberMeContainer: { 
-    flexDirection: "row", 
-    alignItems: "center",
-  },
+  rememberMeContainer: { flexDirection: "row", alignItems: "center" },
   checkbox: {
     width: 22,
     height: 22,
@@ -403,83 +323,30 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  checkboxActive: { 
-    borderColor: COLORS.primary, 
-    backgroundColor: COLORS.primary,
-  },
-  checkboxInner: { 
-    width: 12, 
-    height: 12, 
-    borderRadius: 3, 
-    backgroundColor: COLORS.white,
-  },
-  rememberMeText: { 
-    fontSize: 14, 
-    color: COLORS.text,
-    fontWeight: "500",
-  },
-  forgotPasswordText: { 
-    fontSize: 14, 
-    color: COLORS.primary, 
-    fontWeight: "600",
-  },
+  checkboxActive: { borderColor: COLORS.primary, backgroundColor: COLORS.primary },
+  checkboxInner: { width: 12, height: 12, borderRadius: 3, backgroundColor: COLORS.white },
+  rememberMeText: { fontSize: 14, color: COLORS.text, fontWeight: "500" },
+  forgotPasswordText: { fontSize: 14, color: COLORS.primary, fontWeight: "600" },
   loginButton: {
-    backgroundColor: COLORS.primary,
+    backgroundColor: COLORS.primary, // ✅ CHANGED TO BLUE
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: "center",
-    shadowColor: COLORS.primary,
+    shadowColor: COLORS.primary, // ✅ CHANGED TO BLUE
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 4,
   },
-  loginButtonDisabled: {
-    backgroundColor: COLORS.secondary,
-    opacity: 0.7,
-  },
-  loadingContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  loginButtonText: { 
-    color: COLORS.white, 
-    fontSize: 17, 
-    fontWeight: "bold",
-    letterSpacing: 0.5,
-  },
-  divider: { 
-    flexDirection: "row", 
-    alignItems: "center", 
-    marginVertical: 28,
-  },
-  dividerLine: { 
-    flex: 1, 
-    height: 1, 
-    backgroundColor: COLORS.border,
-  },
-  dividerText: {
-    marginHorizontal: 16,
-    fontSize: 13,
-    color: COLORS.textLight,
-    fontWeight: "600",
-  },
-  footer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    paddingTop: 8,
-  },
-  footerText: { 
-    fontSize: 15, 
-    color: COLORS.textLight,
-  },
-  registerLink: { 
-    fontSize: 15, 
-    color: COLORS.primary, 
-    fontWeight: "700",
-  },
+  loginButtonDisabled: { backgroundColor: COLORS.secondary, opacity: 0.7 },
+  loadingContainer: { flexDirection: "row", alignItems: "center", gap: 8 },
+  loginButtonText: { color: COLORS.white, fontSize: 17, fontWeight: "bold" },
+  divider: { flexDirection: "row", alignItems: "center", marginVertical: 28 },
+  dividerLine: { flex: 1, height: 1, backgroundColor: COLORS.border },
+  dividerText: { marginHorizontal: 16, fontSize: 13, color: COLORS.textLight, fontWeight: "600" },
+  footer: { flexDirection: "row", justifyContent: "center", alignItems: "center", paddingTop: 8 },
+  footerText: { fontSize: 15, color: COLORS.textLight },
+  registerLink: { fontSize: 15, color: COLORS.primary, fontWeight: "700" },
 });
 
 export default LoginScreen;
